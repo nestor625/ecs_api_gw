@@ -1,0 +1,33 @@
+resource "aws_db_subnet_group" "databasegroup" {
+  name       = "${var.project_name}-${var.tag_env}"
+  subnet_ids = aws_subnet.dbsubnets.*.id
+
+  tags = {
+    Proj = "${var.tag_proj}"
+    env  = "${var.tag_env}"
+  }
+}
+
+
+resource "aws_db_instance" "mssql" {
+  identifier                = "${var.project_name}-${var.tag_env}-mssql"
+  allocated_storage         = 250
+  license_model             = "license-included"
+  storage_type              = "gp2"
+  engine                    = "sqlserver-se"
+  engine_version            = var.rds_version
+  instance_class            = var.instance_class
+  multi_az                  = false
+  username                  = var.rds_username
+  password                  = var.rds_password
+  vpc_security_group_ids    = [aws_security_group.rds.id]
+  db_subnet_group_name      = aws_db_subnet_group.databasegroup.name
+  backup_retention_period   = 3
+  skip_final_snapshot       = true
+  publicly_accessible       = false
+
+  tags = {
+    Proj = "${var.tag_proj}"
+    env  = "${var.tag_env}"
+  }
+}
